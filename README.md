@@ -40,6 +40,7 @@ It's possible to install and update this plugin using package managers like `npm
 options = {
     position: 'topleft',            // Position to show the control. Values: 'topright', 'topleft', 'bottomright', 'bottomleft'
     unit: 'metres',                 // Show imperial or metric distances. Values: 'metres', 'landmiles', 'nauticalmiles'
+    angleUnit: 'degrees',           // Angle unit. Values: 'degrees', 'gradians'
     clearMeasurementsOnStop: true,  // Clear all the measurements when the control is unselected
     showBearings: false,            // Whether bearings are displayed within the tooltips
     bearingTextIn: 'In'             // language dependend label for inbound bearings

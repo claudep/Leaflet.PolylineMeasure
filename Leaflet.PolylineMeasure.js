@@ -47,6 +47,12 @@
              */
             unit: 'metres',
             /**
+             * Which units the angles are displayed in. Possible values are: 'degrees', 'gradians'
+             * @type {String}
+             * @default
+             */
+            angleUnit: 'degrees',
+            /**
              * Clear the measurements on stop
              * @type {Boolean}
              * @default
@@ -518,6 +524,11 @@
             this._map.fire('polylinemeasure:clear');
         },
 
+        _showEmptyBearings: function() {
+            var angleUnitSymbol = this.options.angleUnit == 'gradians' ? 'ᵍ' : '°';
+            return this.options.bearingTextIn + ':---' + angleUnitSymbol + '<br>' + this.options.bearingTextOut + ':---' + angleUnitSymbol;
+        },
+
         _changeUnit: function() {
             if (this.options.unit == "metres") {
                 this.options.unit = "landmiles";
@@ -564,7 +575,7 @@
                     var text = '';
                     var totalDistance = 0;
                     if (this.options.showBearings === true) {
-                        text = this.options.bearingTextIn+':---°<br>'+this.options.bearingTextOut+':---°';
+                        text = this._showEmptyBearings();
                     }
                     text = text + '<div class="polyline-measure-tooltip-difference">+' + '0</div>';
                     text = text + '<div class="polyline-measure-tooltip-total">' + '0</div>';
@@ -717,6 +728,7 @@
          * @private
          */
         _updateTooltip: function (currentTooltip, prevTooltip, total, difference, lastCircleCoords, mouseCoords) {
+            var angleUnit = this.options.angleUnit;
             // Explanation of formula: http://www.movable-type.co.uk/scripts/latlong.html
             var calcAngle = function (p1, p2, direction) {
                 var lat1 = p1.lat / 180 * Math.PI;
@@ -726,21 +738,24 @@
                 var y = Math.sin(lng2-lng1) * Math.cos(lat2);
                 var x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(lng2-lng1);
                 if (direction === "inbound") {
-                    var brng = (Math.atan2(y, x) * 180 / Math.PI + 180).toFixed(0);
+                    var brng = (Math.atan2(y, x) * 180 / Math.PI + 180);
                 } else {
-                    var brng = (Math.atan2(y, x) * 180 / Math.PI + 360).toFixed(0);
+                    var brng = (Math.atan2(y, x) * 180 / Math.PI + 360);
                 }
-                return (brng % 360);
+                var angleValue = (brng % 360);
+                if (angleUnit == 'gradians') angleValue = angleValue * 10 / 9;
+                return angleValue.toFixed(0);
             }
 
             var angleIn = calcAngle (mouseCoords, lastCircleCoords, "inbound");
             var angleOut = calcAngle (lastCircleCoords, mouseCoords, "outbound");
+            var angleUnitSymbol = this.options.angleUnit == 'gradians' ? 'ᵍ' : '°';
             var totalRound = this._getDistance (total);
             var differenceRound = this._getDistance (difference);
             var textCurrent = '';
             if (differenceRound.value > 0 ) {
                 if (this.options.showBearings === true) {
-                     textCurrent = this.options.bearingTextIn + ': ' + angleIn + '°<br>'+this.options.bearingTextOut+':---°';
+                     textCurrent = this.options.bearingTextIn + ': ' + angleIn + angleUnitSymbol +'<br>' + this.options.bearingTextOut + ':---' + angleUnitSymbol;
                 }
                 textCurrent += '<div class="polyline-measure-tooltip-difference">+' + differenceRound.value + '&nbsp;' +  differenceRound.unit + '</div>';
             }
@@ -748,8 +763,8 @@
             currentTooltip._icon.innerHTML = textCurrent;
             if ((this.options.showBearings === true) && (prevTooltip)) {
                 var textPrev = prevTooltip._icon.innerHTML;
-                var regExp = new RegExp(this.options.bearingTextOut + '.*\°');
-                var textReplace = textPrev.replace(regExp, this.options.bearingTextOut + ': ' + angleOut + "°");
+                var regExp = new RegExp(this.options.bearingTextOut + '.*' + angleUnitSymbol);
+                var textReplace = textPrev.replace(regExp, this.options.bearingTextOut + ': ' + angleOut + angleUnitSymbol);
                 prevTooltip._icon.innerHTML = textReplace;
             }
         },
@@ -930,7 +945,7 @@
             firstTooltip.addTo(this._layerPaint);
             var text = '';
             if (this.options.showBearings === true) {
-                text = this.options.bearingTextIn+':---°<br>'+this.options.bearingTextOut+':---°';
+                text = this._showEmptyBearings();
             }
             text = text + '<div class="polyline-measure-tooltip-difference">+' + '0</div>';
             text = text + '<div class="polyline-measure-tooltip-total">' + '0</div>';
@@ -1223,7 +1238,7 @@
                     this._tooltipNew.addTo(this._layerPaint);
                     var text='';
                     if (this.options.showBearings === true) {
-                        text = text + this.options.bearingTextIn+':---°<br>'+this.options.bearingTextOut+':---°';
+                        text = text + this._showEmptyBearings();
                     }
                     text = text + '<div class="polyline-measure-tooltip-difference">+' + '0</div>';
                     text = text + '<div class="polyline-measure-tooltip-total">' + '0</div>';
@@ -1288,7 +1303,7 @@
                         this._arrPolylines[lineNr].arrowMarkers.splice(0,1);
                         var text='';
                         if (this.options.showBearings === true) {
-                            text = this.options.bearingTextIn+':---°<br>'+this.options.bearingTextOut+':---°';
+                            text = this._showEmptyBearings();
                         }
                         text = text + '<div class="polyline-measure-tooltip-difference">+' + '0</div>';
                         text = text + '<div class="polyline-measure-tooltip-total">' + '0</div>';
@@ -1361,7 +1376,7 @@
 		                this._currentLine.arrowMarkers.splice(0,1);
 		                var text='';
 		                if (this.options.showBearings === true) {
-			                text = this.options.bearingTextIn+':---°<br>'+this.options.bearingTextOut+':---°';
+			                text = this._showEmptyBearings();
 		                }
 		                text = text + '<div class="polyline-measure-tooltip-difference">+' + '0</div>';
 		                text = text + '<div class="polyline-measure-tooltip-total">' + '0</div>';
